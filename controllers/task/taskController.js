@@ -1,0 +1,123 @@
+const User = require('../../models/user');
+const taskItemsModel = require('../../models/task');
+const jwt = require("jsonwebtoken");
+const config=require('../../utils/config');
+
+const SECRET_KEY = config.SECRET_KEY;
+
+const getTokenFrom = (request) => {
+    const authHeader = request.header('Authorization');
+    return authHeader;
+}
+
+const taskController={
+    
+      //To get the ID of User
+      getUserID:async(req,res)=>{
+        try{
+            const token = getTokenFrom(req);
+            // decode the token to authorize the user
+            const decodedToken = jwt.verify(token, SECRET_KEY);
+            // if the token is not valid, return an error
+            if(!decodedToken){
+                return response.json({ message: 'token invalid' });
+            }
+            const user=await User.findById(decodedToken.userId).exec();
+            const user_ID=user._id
+            res.status(200).json({user_ID,user})
+            
+        }
+        catch(error){
+            console.error('Error in Fetching User ID',error)
+            res.status(500).json({message:'Error in Fetching User ID'})
+        }
+    },
+
+    //To view all tasks
+    getAllTasks:async(req,res)=>{
+        try{
+            const allTodoItems = await taskItemsModel.find({user:req.params.id});
+            // console.log(allTodoItems);
+            res.status(200).json(allTodoItems)
+          }catch(err){
+            res.json(err);
+          }
+    },
+
+    //To get Task using ID
+    getTask:async(req,res)=>{
+      try{
+          //console.log(req.params.id)
+          const TodoItems = await taskItemsModel.findById(req.params.id).exec();
+          //console.log({TodoItems});
+          res.status(200).json({TodoItems})
+        }catch(err){
+          res.json(err);
+        }
+  },
+
+     //To add new task
+     addnewTask:async(req,res)=>{
+        try{
+            const {name,summary,description}=req.body;
+            console.log("TASK "+name+"   "+ summary, description)
+            const newItem = new taskItemsModel({
+              name: name,
+              summary:summary,
+              description:description,
+              status:'To-do',
+              user:req.params.id,
+            })
+            //save this item in database
+            const saveItem = await newItem.save();
+            // console.log(saveItem)
+            res.status(200).json(saveItem);
+          }catch(err){
+            res.json(err);
+          }
+    },
+
+    //To update Status
+    editStatus:async(req,res)=>{
+      try{
+        
+            //find the item by its id and update it
+            const updateStatus = await taskItemsModel.findByIdAndUpdate(req.params.id).exec();
+            updateStatus.set({status:'Completed'})
+            const result=await updateStatus.save();
+            //console.log(result)
+            res.status(200).json({result});
+          }catch(err){
+            res.json(err);
+          }
+    },
+
+     //To update a task
+     editTask:async(req,res)=>{
+        try{
+            //find the item by its id and update it
+            const updateItem = await taskItemsModel.findByIdAndUpdate(req.params.id).exec();
+            updateItem.set(req.body)
+            const result=await updateItem.save();
+            res.status(200).json({result});
+          }catch(err){
+            res.json(err);
+          }
+    },
+
+     //To Delete a task
+     deleteTask:async(req,res)=>{
+        try{
+          //console.log(req.params.id)
+            //find the item by its id and delete it
+            const deleteItem = await taskItemsModel.findByIdAndDelete(req.params.id);
+            // console.log("DELETED");
+            res.status(200).json('Item Deleted');
+          }catch(err){
+            res.json(err);
+          }
+    },
+
+}
+
+module.exports=taskController;

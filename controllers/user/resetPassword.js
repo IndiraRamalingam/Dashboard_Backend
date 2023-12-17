@@ -31,10 +31,10 @@ const resetPassword = {
         { new: true },
       );
 
-      //  let link = `http://localhost:5173/reset_password/${token}`;
-      let link = `https://e-commerce-product-fe.netlify.app/reset_password/${token}`;
+        let link = `http://localhost:5173/reset_password/${token}`;
+      //let link = `https://e-commerce-product-fe.netlify.app/reset_password/${token}`;
 
-      await sendMail(userDB.email, "URL Shortener App - Reset your password ", `Hello!!, You have requested to reset your password.
+      await sendMail(userDB.email, "JIRA Dashboard URL Shortener App - Reset your password ", `Hello!!, You have requested to reset your password.
 
      Please click the following link to reset your password: ${link}`);
       res.status(200).send({
